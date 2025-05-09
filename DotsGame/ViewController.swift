@@ -21,12 +21,14 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var templateBottomButton: UIButton!
     
+    @IBOutlet weak var turnlabel: UILabel!
     
     var redTurn: Bool = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         buildViewArray()
+        updatePlayer()
         // Do any additional setup after loading the view.
     }
     var views: [[gameSegment]] = [[]]
@@ -36,7 +38,7 @@ class ViewController: UIViewController {
         var buttonCounter: Int = 0
         var iRow: Int = 0
         var iColumn: Int = 0
-        views = Array(repeating: Array(repeating: gameSegment(), count: 5), count: 5)
+        views = Array(repeating: Array(repeating: gameSegment(), count: 6), count: 7)
         iRow = 0
         // add all buttons to the array
         for case let horizontalStackView as UIStackView in verticalStack.arrangedSubviews {
@@ -88,6 +90,8 @@ class ViewController: UIViewController {
     }
     
     @IBAction func leftButtonPressed(_ sender: UIButton) {
+        
+        var madeABox: Bool = false
         print("left")
         let location = identifyButton(sender)
         print(location.row, location.column)
@@ -103,24 +107,39 @@ class ViewController: UIViewController {
         
         if checkForBox (views[location.row][location.column]) {
             print("Made a box")
+            madeABox = true
             if redTurn {
                 views[location.row][location.column].body.backgroundColor = UIColor.red
             } else {
                 views[location.row][location.column].body.backgroundColor = UIColor.blue
             }
-        } else if location.column > 0 && checkForBox(views[location.row][location.column - 1]) {
+            
+        }
+        
+        if location.column > 0 && checkForBox(views[location.row][location.column - 1]) {
+            madeABox = true
             if redTurn {
                 views[location.row][location.column - 1].body.backgroundColor = UIColor.red
             } else {
                 views[location.row][location.column - 1].body.backgroundColor = UIColor.blue
             }
-        } else {
+        } 
+        
+        if !madeABox {
             redTurn = !redTurn
+            updatePlayer()
+        } else {
+            if !checkForWinner() {
+                updatePlayer()
+            }
         }
+        
     }
     
     @IBAction func rightButtonPressed(_ sender: UIButton) {
         print("right")
+        var madeABox: Bool = false
+        
         let location = identifyButton(sender)
         print(location.row, location.column)
         
@@ -134,23 +153,34 @@ class ViewController: UIViewController {
         
         if checkForBox (views[location.row][location.column]) {
             print("Made a box")
+            madeABox = true
             if redTurn {
                 views[location.row][location.column].body.backgroundColor = UIColor.red
             } else {
                 views[location.row][location.column].body.backgroundColor = UIColor.blue
             }
-        } else if location.column < views[location.row].count - 1 && checkForBox(views[location.row][location.column + 1]) {
+        }
+        if location.column < views[location.row].count - 1 && checkForBox(views[location.row][location.column + 1]) {
+            madeABox = true
             if redTurn {
                 views[location.row][location.column + 1].body.backgroundColor = UIColor.red
             } else {
                 views[location.row][location.column + 1].body.backgroundColor = UIColor.blue
             }
-        } else {
+        }
+        
+        if !madeABox {
             redTurn = !redTurn
+            updatePlayer()
+        } else {
+            if !checkForWinner() {
+                updatePlayer()
+            }
         }
     }
     @IBAction func topButtonPressed(_ sender: UIButton) {
         print("top")
+        var madeABox: Bool = false
         let location = identifyButton(sender)
         print(location.row, location.column)
         
@@ -165,24 +195,36 @@ class ViewController: UIViewController {
         
         if checkForBox (views[location.row][location.column]) {
             print("Made a box")
+            madeABox = true
             if redTurn {
                 views[location.row][location.column].body.backgroundColor = UIColor.red
             } else {
                 views[location.row][location.column].body.backgroundColor = UIColor.blue
             }
-        } else if location.row > 0 && checkForBox(views[location.row - 1][location.column]) {
+        }
+        
+        if location.row > 0 && checkForBox(views[location.row - 1][location.column]) {
+            madeABox = true
             if redTurn {
                 views[location.row - 1][location.column].body.backgroundColor = UIColor.red
             } else {
                 views[location.row - 1][location.column].body.backgroundColor = UIColor.blue
             }
-        } else {
+        }
+        
+        if !madeABox {
             redTurn = !redTurn
+            updatePlayer()
+        } else {
+            if !checkForWinner() {
+                updatePlayer()
+            }
         }
         
     }
     @IBAction func bottomButtonPressed(_ sender: UIButton) {
         print("bottom")
+        var madeABox: Bool = false
         let location = identifyButton(sender)
         print(location.row, location.column)
         
@@ -196,19 +238,28 @@ class ViewController: UIViewController {
         
         if checkForBox (views[location.row][location.column]) {
             print("Made a box")
+            madeABox = true
             if redTurn {
                 views[location.row][location.column].body.backgroundColor = UIColor.red
             } else {
                 views[location.row][location.column].body.backgroundColor = UIColor.blue
             }
-        } else if location.row < views.count - 1 && checkForBox(views[location.row + 1][location.column]) {
+        }
+        if location.row < views.count - 1 && checkForBox(views[location.row + 1][location.column]) {
+            madeABox = true
             if redTurn {
                 views[location.row + 1][location.column].body.backgroundColor = UIColor.red
             } else {
                 views[location.row + 1][location.column].body.backgroundColor = UIColor.blue
             }
-        } else {
+        }
+        if !madeABox {
             redTurn = !redTurn
+            updatePlayer()
+        } else {
+            if !checkForWinner() {
+                updatePlayer()
+            }
         }
     }
     
@@ -230,6 +281,36 @@ class ViewController: UIViewController {
         } else {
             return false
         }
+    }
+    
+    func updatePlayer() {
+        if redTurn {
+            turnlabel.text = "Red turn"
+        } else {
+            turnlabel.text = "Blue turn"
+        }
+    }
+    
+    func checkForWinner() -> Bool {
+        var redCount: Int = 0
+        var blueCount: Int = 0
+        for row in views {
+            for view in row {
+                if view.body.backgroundColor == UIColor.lightGray {
+                    return false
+                } else if view.body.backgroundColor == UIColor.blue {
+                    blueCount += 1
+                } else if view.body.backgroundColor == UIColor.red {
+                    redCount += 1
+                }
+            }
+        }
+        if redCount > blueCount {
+            turnlabel.text = "Red wins!"
+        } else {
+            turnlabel.text = "Blue wins!"
+        }
+        return true
     }
 }
 
